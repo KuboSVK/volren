@@ -4,9 +4,10 @@
 #include <QDebug>
 #include <QGLFormat>
 #include <QGLFunctions>
+#include <QGLViewer/manipulatedFrame.h>
 
-#include "irenderer.h"
-#include "ray_casting_engine.h"
+#include "core/irenderer.h"
+#include "core/ray_casting_engine.h"
 
 namespace gui
 {
@@ -54,15 +55,17 @@ void GLRenderWidget::init()
 
     QGLViewer::init();
 
+    setSceneRadius(5.0f);
     camera()->showEntireScene();
+    setManipulatedFrame(new qglviewer::ManipulatedFrame());
+
+    //mRayCastingEngine->init();
 
     // Restore previous viewer state.
     restoreStateFromFile();
 
     // Opens help window
     help();
-
-    mRayCastingEngine->init();
 }
 
 void GLRenderWidget::draw()

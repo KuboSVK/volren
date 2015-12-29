@@ -13,18 +13,20 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp \
-           main_window.cpp \
-           gl_render_widget.cpp \
-           shader_object.cpp \
-           program_object.cpp \
-           ray_casting_engine.cpp
+           gui/main_window.cpp \
+           gui/gl_render_widget.cpp \
+           core/shader_object.cpp \
+           core/program_object.cpp \
+           core/ray_casting_engine.cpp \
+           gui/settings_widget.cpp
 
-HEADERS  += main_window.h \
-            gl_render_widget.h \
-            shader_object.h \
-            program_object.h \
-            irenderer.h \
-            ray_casting_engine.h
+HEADERS  += gui/main_window.h \
+            gui/gl_render_widget.h \
+            core/shader_object.h \
+            core/program_object.h \
+            core/irenderer.h \
+            core/ray_casting_engine.h \
+            gui/settings_widget.h
 
 RESOURCES += resources.qrc
 
