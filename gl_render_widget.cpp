@@ -1,12 +1,20 @@
 #include "gl_render_widget.h"
 
+#include <QGLContext>
+#include <QDebug>
+#include <QGLFormat>
+#include <QGLFunctions>
+
+#include "irenderer.h"
+#include "ray_casting_engine.h"
+
 namespace gui
 {
 
 GLRenderWidget::GLRenderWidget(QWidget *parent)
-    : QGLViewer(parent)
+: QGLViewer(parent)
 {
-
+    mRayCastingEngine = new core::RayCastingEngine();
 }
 
 GLRenderWidget::~GLRenderWidget()
@@ -14,38 +22,69 @@ GLRenderWidget::~GLRenderWidget()
 
 }
 
+void GLRenderWidget::resizeGL(int width, int height)
+{
+    qDebug() << "resizeGL";
+
+    QGLViewer::resizeGL(width, height);
+
+    mRayCastingEngine->resize(width, height);
+}
+
+void GLRenderWidget::initializeGL()
+{
+    qDebug() << "initializeGL";
+
+    QGLViewer::initializeGL();
+
+    mOpenGLFormat = new QGLFormat;
+    mOpenGLFormat->setVersion(4, 3);
+    mOpenGLFormat->setProfile(QGLFormat::CoreProfile);
+
+    mOpenGLContext = new QGLContext(*mOpenGLFormat, this);
+    mOpenGLContext->create();
+    mOpenGLContext->makeCurrent();
+
+    initializeOpenGLFunctions();
+}
+
 void GLRenderWidget::init()
 {
+    qDebug() << "init";
+
+    QGLViewer::init();
+
+    camera()->showEntireScene();
+
     // Restore previous viewer state.
     restoreStateFromFile();
 
     // Opens help window
     help();
+
+    mRayCastingEngine->init();
 }
 
 void GLRenderWidget::draw()
 {
-    const float nbSteps = 200.0;
+    qDebug() << "draw";
 
-    /*glBegin(GL_QUAD_STRIP);
-    for (int i=0; i<nbSteps; ++i)
-    {
-      const float ratio = i/nbSteps;
-      const float angle = 21.0*ratio;
-      const float c = cos(angle);
-      const float s = sin(angle);
-      const float r1 = 1.0 - 0.8f*ratio;
-      const float r2 = 0.8f - 0.8f*ratio;
-      const float alt = ratio - 0.5f;
-      const float nor = 0.5f;
-      const float up = sqrt(1.0-nor*nor);
-      glColor3f(1.0-ratio, 0.2f , ratio);
-      glNormal3f(nor*c, up, nor*s);
-      glVertex3f(r1*c, alt, r1*s);
-      glVertex3f(r2*c, alt+0.05f, r2*s);
-    }
-    glEnd();*/
+    mRayCastingEngine->draw();
 }
+
+void GLRenderWidget::obtainOpenGLContextInfo(QMap<QString, QString>& openGLContextInfo)
+{
+    qDebug() << "obtainOpenGLContextInfo";
+
+    const GLubyte *p;
+    if ((p = glGetString(GL_VENDOR)))
+        openGLContextInfo["vendor"] = QString::fromLatin1(reinterpret_cast<const char *>(p));
+    if ((p = glGetString(GL_RENDERER)))
+        openGLContextInfo["renderer"] = QString::fromLatin1(reinterpret_cast<const char *>(p));
+    if ((p = glGetString(GL_VERSION)))
+        openGLContextInfo["version"] = QString::fromLatin1(reinterpret_cast<const char *>(p));
+    if ((p = glGetString(GL_SHADING_LANGUAGE_VERSION)))
+        openGLContextInfo["glslVersion"] = QString::fromLatin1(reinterpret_cast<const char *>(p));}
 
 QString GLRenderWidget::helpString() const
 {

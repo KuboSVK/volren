@@ -5,6 +5,7 @@
 #include <QCloseEvent>
 #include <QDockWidget>
 #include <QIcon>
+#include <QMap>
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
@@ -12,10 +13,14 @@
 #include <QSettings>
 #include <QSize>
 #include <QStatusBar>
+#include <QString>
+#include <QTextEdit>
 #include <QToolBar>
 #include <QWidget>
 
 #include "gl_render_widget.h"
+
+#include <QDebug>
 
 namespace gui
 {
@@ -50,7 +55,8 @@ void MainWindow::onOpenAction()
 
 void MainWindow::onApplicationAbout()
 {
-    QMessageBox::about(this, tr("About Application"), tr("Volumetric based rendering application."));
+    QMessageBox::about(this, tr("About Application"),
+                             tr("GPU Based Single Pass Ray Casting Engine, 1.0\n\nlubomir.duraj@gmail.com"));
 }
 
 void MainWindow::createActions()
@@ -109,10 +115,19 @@ void MainWindow::createDockWidgets()
     mRenderDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
 
     mRenderWidget = new GLRenderWidget(mRenderDockWidget);
+    connect(mRenderWidget, &GLRenderWidget::viewerInitialized, this, &MainWindow::printOpenGLContextInfo);
     mRenderDockWidget->setWidget(mRenderWidget);
+
+    mOpenGLContextInfoDockWidget = new QDockWidget(tr("Context Information"), this);
+    mOpenGLContextInfoDockWidget->setAllowedAreas(Qt::BottomDockWidgetArea);
+
+    mOpenGLContextInfoTextEdit = new QTextEdit(mOpenGLContextInfoDockWidget);
+    mOpenGLContextInfoTextEdit->setReadOnly(true);
+    mOpenGLContextInfoDockWidget->setWidget(mOpenGLContextInfoTextEdit);
 
     addDockWidget(Qt::LeftDockWidgetArea, mSettingsDockWidget);
     addDockWidget(Qt::RightDockWidgetArea, mRenderDockWidget);
+    addDockWidget(Qt::BottomDockWidgetArea, mOpenGLContextInfoDockWidget);
 }
 
 void MainWindow::loadSettings()
@@ -130,6 +145,27 @@ void MainWindow::storeSettings()
     QSettings settings;
     settings.setValue("main_window/position", pos());
     settings.setValue("main_window/size", size());
+}
+
+void MainWindow::printOpenGLContextInfo()
+{
+    qDebug() << "sdsahsaifhsauifh";
+    QMap<QString, QString> currentContextInfo;
+    //mRenderWidget->obtainOpenGLContextInfo(currentContextInfo);
+    //qDebug() << currentContextInfo;
+    /*QMap<QString, QString>::const_iterator it = currentContextInfo.cbegin();
+
+    qDebug() << currentContextInfo["vendor"];
+
+    mOpenGLContextInfoTextEdit->append(tr("*** Context information ***"));
+    //mOpenGLContextInfoTextEdit->append(currentContextInfo["vendor"]);
+    while (it != currentContextInfo.cend())
+    {
+        //mOpenGLContextInfoTextEdit->append(tr(it.key().toLatin1()) + ": " + it.value().toLatin1());
+        mOpenGLContextInfoTextEdit->append(currentContextInfo["vendor"]);
+    }
+
+    mOpenGLContextInfoTextEdit->moveCursor(QTextCursor::Start);*/
 }
 
 } // namespace gui

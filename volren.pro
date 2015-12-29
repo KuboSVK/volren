@@ -14,10 +14,17 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
            main_window.cpp \
-           gl_render_widget.cpp
+           gl_render_widget.cpp \
+           shader_object.cpp \
+           program_object.cpp \
+           ray_casting_engine.cpp
 
 HEADERS  += main_window.h \
-            gl_render_widget.h
+            gl_render_widget.h \
+            shader_object.h \
+            program_object.h \
+            irenderer.h \
+            ray_casting_engine.h
 
 RESOURCES += resources.qrc
 
