@@ -30,3 +30,4 @@ RESOURCES += resources.qrc
 
 INCLUDEPATH += D:/libQGLViewer-2.6.3/libQGLViewer-2.6.3
 LIBS += -LD:/libQGLViewer-2.6.3/libQGLViewer-2.6.3/QGLViewer -lQGLViewer2
+CONFIG += c++11

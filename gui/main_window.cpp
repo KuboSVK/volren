@@ -4,6 +4,7 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDockWidget>
+#include <QFileDialog>
 #include <QIcon>
 #include <QMap>
 #include <QMenu>
@@ -36,6 +37,8 @@ MainWindow::MainWindow()
 
     mFPSAction->trigger();
     mAxisAction->trigger();
+
+    connect(this, &MainWindow::volumeDataFileOpened, mRenderWidget, &GLRenderWidget::onVolumeDataFileSelected);
 }
 
 MainWindow::~MainWindow()
@@ -50,9 +53,12 @@ void MainWindow::closeEvent(QCloseEvent* event)
     event->accept();
 }
 
-void MainWindow::onOpenAction()
+void MainWindow::onSelectVolumeDataFile()
 {
-
+    QString selectedVolumeDataFileName = QFileDialog::getOpenFileName(this, tr("Open volume data file"),
+                                                                      "./", tr("Raw volume data (*.raw)"),
+                                                                      0, QFileDialog::ReadOnly);
+    emit volumeDataFileOpened(selectedVolumeDataFileName);
 }
 
 void MainWindow::onApplicationAbout()
@@ -97,7 +103,7 @@ void MainWindow::createActions()
     mOpenAction = new QAction(QIcon(":/images/open.png"), tr("&Open..."), this);
     mOpenAction->setShortcuts(QKeySequence::Open);
     mOpenAction->setStatusTip(tr("Open and select volume model"));
-    connect(mOpenAction, &QAction::triggered, this, &onOpenAction);
+    connect(mOpenAction, &QAction::triggered, this, &onSelectVolumeDataFile);
 
     mFPSAction = new QAction(QIcon(":/images/F0.svg"), tr("&Enable/disable displaying FPS info"), this);
     mFPSAction->setCheckable(true);

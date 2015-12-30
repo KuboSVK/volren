@@ -33,6 +33,9 @@ public:
     void obtainOpenGLContextInfo(QMap<QString, QString>& openGLContextInfo);
     virtual QString helpString() const;
 
+public slots:
+    void onVolumeDataFileSelected(QString selectedVolumeDataFileName);
+
 private:
     QGLContext* mOpenGLContext;
     QGLFormat* mOpenGLFormat;

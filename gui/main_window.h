@@ -29,7 +29,7 @@ protected:
     void closeEvent(QCloseEvent* event) Q_DECL_OVERRIDE;
 
 private slots:
-    void onOpenAction();
+    void onSelectVolumeDataFile();
     void onApplicationAbout();
     void printOpenGLContextInfo();
     void fpsChanged(bool checked);
@@ -45,6 +45,10 @@ private:
     void loadSettings();
     void storeSettings();
 
+signals:
+    void volumeDataFileOpened(QString selectedVolumeDataFileName);
+
+private:
     QAction* mOpenAction;
     QAction* mFPSAction;
     QAction* mAxisAction;

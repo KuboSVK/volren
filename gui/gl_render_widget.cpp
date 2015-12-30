@@ -109,4 +109,9 @@ QString GLRenderWidget::helpString() const
     return text;
 }
 
+void GLRenderWidget::onVolumeDataFileSelected(QString selectedVolumeDataFileName)
+{
+    mRayCastingEngine->loadRawVolumeData(selectedVolumeDataFileName);
+}
+
 } // namespace gui
