@@ -17,16 +17,14 @@ SOURCES += main.cpp \
            gui/gl_render_widget.cpp \
            core/shader_object.cpp \
            core/program_object.cpp \
-           core/ray_casting_engine.cpp \
-           gui/settings_widget.cpp
+           core/ray_casting_engine.cpp
 
 HEADERS  += gui/main_window.h \
             gui/gl_render_widget.h \
             core/shader_object.h \
             core/program_object.h \
             core/irenderer.h \
-            core/ray_casting_engine.h \
-            gui/settings_widget.h
+            core/ray_casting_engine.h
 
 RESOURCES += resources.qrc
 

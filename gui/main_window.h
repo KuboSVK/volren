@@ -10,7 +10,6 @@ QT_FORWARD_DECLARE_CLASS(QDockWidget)
 QT_FORWARD_DECLARE_CLASS(QMenu)
 QT_FORWARD_DECLARE_CLASS(QTextEdit)
 QT_FORWARD_DECLARE_CLASS(QToolBar)
-QT_FORWARD_DECLARE_CLASS(QWidget)
 
 namespace gui
 {
@@ -33,6 +32,8 @@ private slots:
     void onOpenAction();
     void onApplicationAbout();
     void printOpenGLContextInfo();
+    void fpsChanged(bool checked);
+    void axisChanged(bool checked);
 
 private:
     void createActions();
@@ -45,6 +46,8 @@ private:
     void storeSettings();
 
     QAction* mOpenAction;
+    QAction* mFPSAction;
+    QAction* mAxisAction;
     QAction* mAppAboutAction;
     QAction* mQtAboutAction;
     QAction* mExitAction;
@@ -52,16 +55,12 @@ private:
     QMenu* mFileMenu;
     QMenu* mHelpMenu;
 
-    QToolBar* mFileToolBar;
+    QToolBar* mSettingsToolBar;
 
-    QDockWidget* mSettingsDockWidget;
-    QDockWidget* mRenderDockWidget;
     QDockWidget* mOpenGLContextInfoDockWidget;
-
-    QWidget* mSettingsWidget;
-    GLRenderWidget* mRenderWidget;
-
     QTextEdit* mOpenGLContextInfoTextEdit;
+
+    GLRenderWidget* mRenderWidget;
 };
 
 } // namespace gui

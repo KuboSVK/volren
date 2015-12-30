@@ -16,7 +16,6 @@
 #include <QString>
 #include <QTextEdit>
 #include <QToolBar>
-#include <QWidget>
 
 #include "gl_render_widget.h"
 
@@ -34,6 +33,9 @@ MainWindow::MainWindow()
     createToolbars();
     createStatusBar();
     createDockWidgets();
+
+    mFPSAction->trigger();
+    mAxisAction->trigger();
 }
 
 MainWindow::~MainWindow()
@@ -59,25 +61,68 @@ void MainWindow::onApplicationAbout()
                              tr("GPU Based Single Pass Ray Casting Engine, 1.0\n\nlubomir.duraj@gmail.com"));
 }
 
+void MainWindow::printOpenGLContextInfo()
+{
+    qDebug() << "sdsahsaifhsauifh";
+    //QMap<QString, QString> currentContextInfo;
+    //mRenderWidget->obtainOpenGLContextInfo(currentContextInfo);
+    //qDebug() << currentContextInfo;
+    /*QMap<QString, QString>::const_iterator it = currentContextInfo.cbegin();
+
+    qDebug() << currentContextInfo["vendor"];
+
+    mOpenGLContextInfoTextEdit->append(tr("*** Context information ***"));
+    //mOpenGLContextInfoTextEdit->append(currentContextInfo["vendor"]);
+    while (it != currentContextInfo.cend())
+    {
+        //mOpenGLContextInfoTextEdit->append(tr(it.key().toLatin1()) + ": " + it.value().toLatin1());
+        mOpenGLContextInfoTextEdit->append(currentContextInfo["vendor"]);
+    }
+
+    mOpenGLContextInfoTextEdit->moveCursor(QTextCursor::Start);*/
+}
+
+void MainWindow::fpsChanged(bool checked)
+{
+    mRenderWidget->setFPSIsDisplayed(checked);
+}
+
+void MainWindow::axisChanged(bool checked)
+{
+    mRenderWidget->setAxisIsDrawn(checked);
+}
+
 void MainWindow::createActions()
 {
     mOpenAction = new QAction(QIcon(":/images/open.png"), tr("&Open..."), this);
     mOpenAction->setShortcuts(QKeySequence::Open);
     mOpenAction->setStatusTip(tr("Open and select volume model"));
-    connect(mOpenAction, SIGNAL(triggered()), this, SLOT(onOpenAction()));
+    connect(mOpenAction, &QAction::triggered, this, &onOpenAction);
+
+    mFPSAction = new QAction(QIcon(":/images/F0.svg"), tr("&Enable/disable displaying FPS info"), this);
+    mFPSAction->setCheckable(true);
+    mFPSAction->setChecked(false);
+    mFPSAction->setStatusTip(tr("Enable/disable displaying FPS info"));
+    connect(mFPSAction, &QAction::triggered, this, &fpsChanged);
+
+    mAxisAction = new QAction(QIcon(":/images/dmA.svg"), tr("&Enable/disable displaying axis"), this);
+    mAxisAction->setCheckable(true);
+    mAxisAction->setChecked(false);
+    mAxisAction->setStatusTip(tr("Enable/disable displaying axis"));
+    connect(mAxisAction, &QAction::triggered, this, &axisChanged);
 
     mAppAboutAction = new QAction(tr("&About"), this);
     mAppAboutAction->setStatusTip(tr("Show the application's About box"));
-    connect(mAppAboutAction, SIGNAL(triggered()), this, SLOT(onApplicationAbout()));
+    connect(mAppAboutAction, &QAction::triggered, this, &onApplicationAbout);
 
     mQtAboutAction = new QAction(tr("About &Qt"), this);
     mQtAboutAction->setStatusTip(tr("Show the Qt library's About box"));
-    connect(mQtAboutAction, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
+    connect(mQtAboutAction, &QAction::triggered, qApp, &QApplication::aboutQt);
 
     mExitAction = new QAction(tr("E&xit"), this);
     mExitAction->setShortcuts(QKeySequence::Quit);
     mExitAction->setStatusTip(tr("Exit the application"));
-    connect(mExitAction, SIGNAL(triggered()), this, SLOT(close()));
+    connect(mExitAction, &QAction::triggered, this, &close);
 }
 
 void MainWindow::createMenus()
@@ -94,8 +139,11 @@ void MainWindow::createMenus()
 
 void MainWindow::createToolbars()
 {
-    mFileToolBar = addToolBar(tr("File"));
-    mFileToolBar->addAction(mOpenAction);
+    mSettingsToolBar = new QToolBar("Scene Settings", this);
+    mSettingsToolBar->addAction(mOpenAction);
+    mSettingsToolBar->addAction(mFPSAction);
+    mSettingsToolBar->addAction(mAxisAction);
+    addToolBar(Qt::TopToolBarArea, mSettingsToolBar);
 }
 
 void MainWindow::createStatusBar()
@@ -105,29 +153,19 @@ void MainWindow::createStatusBar()
 
 void MainWindow::createDockWidgets()
 {
-    mSettingsDockWidget = new QDockWidget(tr("Settings"), this);
-    mSettingsDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-
-    mSettingsWidget = new QWidget(mSettingsDockWidget);
-    mSettingsDockWidget->setWidget(mSettingsWidget);
-
-    mRenderDockWidget = new QDockWidget(tr("Render Output"), this);
-    mRenderDockWidget->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-
-    mRenderWidget = new GLRenderWidget(mRenderDockWidget);
+    mRenderWidget = new GLRenderWidget(this);
     connect(mRenderWidget, &GLRenderWidget::viewerInitialized, this, &MainWindow::printOpenGLContextInfo);
-    mRenderDockWidget->setWidget(mRenderWidget);
 
     mOpenGLContextInfoDockWidget = new QDockWidget(tr("Context Information"), this);
     mOpenGLContextInfoDockWidget->setAllowedAreas(Qt::BottomDockWidgetArea);
+    mOpenGLContextInfoDockWidget->setFloating(false);
 
     mOpenGLContextInfoTextEdit = new QTextEdit(mOpenGLContextInfoDockWidget);
     mOpenGLContextInfoTextEdit->setReadOnly(true);
     mOpenGLContextInfoDockWidget->setWidget(mOpenGLContextInfoTextEdit);
 
-    addDockWidget(Qt::LeftDockWidgetArea, mSettingsDockWidget);
-    addDockWidget(Qt::RightDockWidgetArea, mRenderDockWidget);
     addDockWidget(Qt::BottomDockWidgetArea, mOpenGLContextInfoDockWidget);
+    setCentralWidget(mRenderWidget);
 }
 
 void MainWindow::loadSettings()
@@ -145,27 +183,6 @@ void MainWindow::storeSettings()
     QSettings settings;
     settings.setValue("main_window/position", pos());
     settings.setValue("main_window/size", size());
-}
-
-void MainWindow::printOpenGLContextInfo()
-{
-    qDebug() << "sdsahsaifhsauifh";
-    QMap<QString, QString> currentContextInfo;
-    //mRenderWidget->obtainOpenGLContextInfo(currentContextInfo);
-    //qDebug() << currentContextInfo;
-    /*QMap<QString, QString>::const_iterator it = currentContextInfo.cbegin();
-
-    qDebug() << currentContextInfo["vendor"];
-
-    mOpenGLContextInfoTextEdit->append(tr("*** Context information ***"));
-    //mOpenGLContextInfoTextEdit->append(currentContextInfo["vendor"]);
-    while (it != currentContextInfo.cend())
-    {
-        //mOpenGLContextInfoTextEdit->append(tr(it.key().toLatin1()) + ": " + it.value().toLatin1());
-        mOpenGLContextInfoTextEdit->append(currentContextInfo["vendor"]);
-    }
-
-    mOpenGLContextInfoTextEdit->moveCursor(QTextCursor::Start);*/
 }
 
 } // namespace gui
