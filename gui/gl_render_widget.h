@@ -34,7 +34,7 @@ public:
     virtual QString helpString() const;
 
 public slots:
-    void onVolumeDataFileSelected(QString selectedVolumeDataFileName);
+    void onVolumeDataFileSelected(QString selectedVolumeDataFilePath);
 
 private:
     QGLContext* mOpenGLContext;
