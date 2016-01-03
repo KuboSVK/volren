@@ -23,8 +23,7 @@ Cubic::Cubic(QVector4D a, QVector4D b, QVector4D c, QVector4D d)
 
 QVector4D Cubic::getPointOnSpline(float u)
 {
-    //return (((mD * u) + mC) *u + mB) *u + mA;
-    return QVector4D();
+    return (((mD * u) + mC) *u + mB) *u + mA;
 }
 
 } // namespace

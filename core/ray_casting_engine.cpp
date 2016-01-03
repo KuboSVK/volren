@@ -13,50 +13,65 @@ namespace core
 {
 
 RayCastingEngine::RayCastingEngine()
-: mWidth(800)
-, mHeight(600)
-, mCurrentVolumeData(NULL)
-, mMinVolumeDataValue(0)
-, mMaxVolumeDataValue(0)
+: mCurrentVolumeData(NULL)
 , m1DTransferFucntion(NULL)
 {
     VolumeDataDesciptor aneurism
     {
         QVector3D(256, 256, 256), // grid size per dimension
         quint32(256 * 256 * 256), // cummulative grid size
-        QVector3D(1, 1, 1) // grid sample ration - data z www.volvis.org su reprezentovane na ekvidistantnej mriezke
+        QVector3D(1, 1, 1), // grid sample ration - data z www.volvis.org su reprezentovane na ekvidistantnej mriezke
+        QVector3D(), // mBoundingBoxScaleFactor - inicializacia prebehne neskor
+        QVector3D(), // mBoundingBoxCenter - inicializacia prebehne neskor
+        float(), // mStepSize - inicializacia prebehne neskor
+        quint32() // mIterations - inicializacia prebehne neskor
     };
 
     VolumeDataDesciptor bonsai
     {
         QVector3D(256, 256, 256), // grid size per dimension
         quint32(256 * 256 * 256), // cummulative grid size
-        QVector3D(1, 1, 1) // grid sample ration - data z www.volvis.org su reprezentovane na ekvidistantnej mriezke
+        QVector3D(1, 1, 1), // grid sample ration - data z www.volvis.org su reprezentovane na ekvidistantnej mriezke
+        QVector3D(), // mBoundingBoxScaleFactor - inicializacia prebehne neskor
+        QVector3D(), // mBoundingBoxCenter - inicializacia prebehne neskor
+        float(), // mStepSize - inicializacia prebehne neskor
+        quint32() // mIterations - inicializacia prebehne neskor
     };
 
     VolumeDataDesciptor bostonTeapot
     {
         QVector3D(256, 256, 178), // grid size per dimension
         quint32(256 * 256 * 178), // cummulative grid size
-        QVector3D(1, 1, 1) // grid sample ration - data z www.volvis.org su reprezentovane na ekvidistantnej mriezke
+        QVector3D(1, 1, 1), // grid sample ration - data z www.volvis.org su reprezentovane na ekvidistantnej mriezke
+        QVector3D(), // mBoundingBoxScaleFactor - inicializacia prebehne neskor
+        QVector3D(), // mBoundingBoxCenter - inicializacia prebehne neskor
+        float(), // mStepSize - inicializacia prebehne neskor
+        quint32() // mIterations - inicializacia prebehne neskor
     };
 
     VolumeDataDesciptor male
     {
         QVector3D(128, 256, 256), // grid size per dimension
         quint32(128 * 256 * 256), // cummulative grid size
-        QVector3D(1.57774, 0.995861, 1.00797) // ne-ekvidistantna mriezka
+        QVector3D(1.57774, 0.995861, 1.00797), // ne-ekvidistantna mriezka
+        QVector3D(), // mBoundingBoxScaleFactor - inicializacia prebehne neskor
+        QVector3D(), // mBoundingBoxCenter - inicializacia prebehne neskor
+        float(), // mStepSize - inicializacia prebehne neskor
+        quint32() // mIterations - inicializacia prebehne neskor
     };
 
-    mVolumeDataDescription.insert("aneurism", aneurism);
-    mVolumeDataDescription.insert("bonsai", bonsai);
-    mVolumeDataDescription.insert("BostonTeapot", bostonTeapot);
-    mVolumeDataDescription.insert("male", male);
+    mVolumeDataSets.insert("aneurism", aneurism);
+    mVolumeDataSets.insert("bonsai", bonsai);
+    mVolumeDataSets.insert("BostonTeapot", bostonTeapot);
+    mVolumeDataSets.insert("male", male);
+
+    preprocessVolumeData();
 }
 
 RayCastingEngine::~RayCastingEngine()
 {
     delete[] mCurrentVolumeData;
+    delete[] m1DTransferFucntion;
 }
 
 void RayCastingEngine::resize(int width, int height)
@@ -91,19 +106,19 @@ void RayCastingEngine::loadRawVolumeData(QString volumeDataFilePath)
             QString volumeDataFileName = volumeDataFilePath.split("/", QString::SkipEmptyParts, Qt::CaseInsensitive).last();
             if (volumeDataFileName == "aneurism.raw")
             {
-                mCurrentVolumeDataDescriptor = mVolumeDataDescription["aneurism"];
+                mCurrentVolumeDataSet = "aneurism";
             }
             else if (volumeDataFileName == "bonsai.raw")
             {
-                mCurrentVolumeDataDescriptor = mVolumeDataDescription["bonsai"];
+                mCurrentVolumeDataSet = "bonsai";
             }
             else if (volumeDataFileName == "BostonTeapot.raw")
             {
-                mCurrentVolumeDataDescriptor = mVolumeDataDescription["BostonTeapot"];
+                mCurrentVolumeDataSet = "BostonTeapot";
             }
             else if (volumeDataFileName == "male.raw")
             {
-                mCurrentVolumeDataDescriptor = mVolumeDataDescription["male"];
+                mCurrentVolumeDataSet = "male";
             }
 
             if (mCurrentVolumeData != NULL)
@@ -112,35 +127,62 @@ void RayCastingEngine::loadRawVolumeData(QString volumeDataFilePath)
                 mCurrentVolumeData = NULL;
             }
 
-            mCurrentVolumeData = new GLubyte[mCurrentVolumeDataDescriptor.mCummulativeGridSize];
-            fread((void*)mCurrentVolumeData, sizeof(GLubyte), mCurrentVolumeDataDescriptor.mCummulativeGridSize, fp);
+            mCurrentVolumeData = new GLubyte[mVolumeDataSets[mCurrentVolumeDataSet].mCummulativeGridSize];
+            fread((void*)mCurrentVolumeData, sizeof(GLubyte), mVolumeDataSets[mCurrentVolumeDataSet].mCummulativeGridSize, fp);
             fclose(fp);
 
-            prepareVolumeData();
+            GLubyte mMinVolumeDataValue = mCurrentVolumeData[0];
+            GLubyte mMaxVolumeDataValue = mCurrentVolumeData[0];
+
+            for (quint32 i = 1; i < mVolumeDataSets[mCurrentVolumeDataSet].mCummulativeGridSize; ++i)
+            {
+                if (mCurrentVolumeData[i] < mMinVolumeDataValue)
+                {
+                    mMinVolumeDataValue = mCurrentVolumeData[i];
+                }
+
+                if (mCurrentVolumeData[i] > mMaxVolumeDataValue)
+                {
+                    mMaxVolumeDataValue = mCurrentVolumeData[i];
+                }
+            }
+
+            createSplinePoints();
+            computeTransferFunction();
         }
     }
 }
 
-void RayCastingEngine::prepareVolumeData()
+void RayCastingEngine::preprocessVolumeData()
 {
-    mMinVolumeDataValue = mCurrentVolumeData[0];
-    mMaxVolumeDataValue = mCurrentVolumeData[0];
+    // vypocet scale faktorov
+    // nas bounding box je jednotkova kocka zarovnana vzhladom k hlavnym suradnicovym osiam x, y, z v object - space
+    // jeden extremny vrchol bounding boxu sa nachadza v pociatku suradnicovej sustavy, druhy v bode o suradniciach (1, 1, 1)
+    // 3D data volumes nie su vzdy idealne kocky - je potrebne scalnut nas bounding box (proxy geometry) hodnotami vo vektore scaleFactor
+    // takisto sa moze stat, ze skalarne data nie su rozprestrene na mriezke s ekvidistantnymi vzdialenostami - musime prenasobit velkosti volume modelu vektorom gridSampleRatio
 
-    for (quint32 i = 1; i < mCurrentVolumeDataDescriptor.mCummulativeGridSize; ++i)
+    // vypocet scale faktoru, ide vlastne o normalized volume extend - tento vektor sa pouzije ako uniform premenna vo vertex shaderi, kde nim prenasobim poziciu kazdeho vrcholu nasej bounding box
+    QMap<QString, VolumeDataDesciptor>::iterator it = mVolumeDataSets.begin();
+    while (it != mVolumeDataSets.end())
     {
-        if (mCurrentVolumeData[i] < mMinVolumeDataValue)
-        {
-            mMinVolumeDataValue = mCurrentVolumeData[i];
-        }
+        VolumeDataDesciptor volumeDataSet = it.value();
+        QVector3D gridSizePerDimension = volumeDataSet.mGridSizePerDimension;
+        QVector3D gridSampleRatio = volumeDataSet.mGridSampleRatio;
+        float maxSizePerDimension = qMax(gridSizePerDimension.x(), qMax(gridSizePerDimension.y(), gridSizePerDimension.z()));
 
-        if (mCurrentVolumeData[i] > mMaxVolumeDataValue)
-        {
-            mMaxVolumeDataValue = mCurrentVolumeData[i];
-        }
+        volumeDataSet.mBoundingBoxScaleFactor.setX((float) (1.0 / (maxSizePerDimension / (gridSizePerDimension.x() * gridSampleRatio.x()))));
+        volumeDataSet.mBoundingBoxScaleFactor.setY((float) (1.0 / (maxSizePerDimension / (gridSizePerDimension.y() * gridSampleRatio.y()))));
+        volumeDataSet.mBoundingBoxScaleFactor.setZ((float) (1.0 / (maxSizePerDimension / (gridSizePerDimension.z() * gridSampleRatio.z()))));
+
+        volumeDataSet.mBoundingBoxCenter.setX(volumeDataSet.mBoundingBoxScaleFactor.x() / 2);
+        volumeDataSet.mBoundingBoxCenter.setY(volumeDataSet.mBoundingBoxScaleFactor.y() / 2);
+        volumeDataSet.mBoundingBoxCenter.setZ(volumeDataSet.mBoundingBoxScaleFactor.z() / 2);
+
+        volumeDataSet.mStepSize = 1.0 / maxSizePerDimension;
+        volumeDataSet.mIterations = maxSizePerDimension * 2;
+
+        ++it;
     }
-
-    createSplinePoints();
-    computeTransferFunction();
 }
 
 void RayCastingEngine::createSplinePoints()

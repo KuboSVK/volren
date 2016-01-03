@@ -22,6 +22,10 @@ struct VolumeDataDesciptor
     QVector3D mGridSizePerDimension;
     quint32 mCummulativeGridSize;
     QVector3D mGridSampleRatio;
+    QVector3D mBoundingBoxScaleFactor;
+    QVector3D mBoundingBoxCenter;
+    float mStepSize;
+    quint32 mIterations;
 };
 
 class RayCastingEngine : public IRenderer, public QOpenGLFunctions
@@ -36,22 +40,16 @@ public:
     virtual void loadRawVolumeData(QString volumeDataFilePath) Q_DECL_OVERRIDE;
 
 private:
-    void prepareVolumeData();
+    void preprocessVolumeData();
     void createSplinePoints();
     void computeTransferFunction();
 
 private:
-    int mWidth;
-    int mHeight;
-
     GLubyte* mCurrentVolumeData;
-    GLubyte mMinVolumeDataValue;
-    GLubyte mMaxVolumeDataValue;
-
     GLfloat* m1DTransferFucntion;
 
-    VolumeDataDesciptor mCurrentVolumeDataDescriptor;
-    QMap<QString, VolumeDataDesciptor> mVolumeDataDescription;
+    QString mCurrentVolumeDataSet;
+    QMap<QString, VolumeDataDesciptor> mVolumeDataSets;
 
     QVector<TransferControlPoint> mColorPoints;
     QVector<TransferControlPoint> mAlphaPoints;

@@ -57,7 +57,10 @@ Cubic* CubicSpline::computeCubicSpline(quint32 nPoints, QVector<TransferControlP
             (points[i].getColor() - points[i + 1].getColor()) * 2.0f + D[i] + D[i + 1]);
     }
 
-    delete gamma, delta, D;
+    delete[] gamma;
+    delete[] delta;
+    delete[] D;
+
     return C;
 }
 

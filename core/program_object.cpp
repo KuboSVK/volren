@@ -25,7 +25,8 @@ bool ProgramObject::attachShaderObjects()
     mProgramObjectId = glCreateProgram();
     if (mProgramObjectId != 0)
     {
-        foreach (const ShaderObject* shaderObject, mAttachedShaderObjects) {
+        foreach (const ShaderObject* shaderObject, mAttachedShaderObjects)
+        {
             glAttachShader(mProgramObjectId, shaderObject->shaderObjectId());
         }
 
