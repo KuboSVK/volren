@@ -1,13 +1,16 @@
 #include "ray_casting_engine.h"
 
+#include <QFile>
 #include <QMessageBox>
 #include <QVector4D>
 #include <stdio.h>
 
-#include <QDebug>
-
 #include "cubic.h"
 #include "cubic_spline.h"
+#include "shader_object.h"
+#include "program_object.h"
+
+#include <QDebug>
 
 namespace core
 {
@@ -81,10 +84,7 @@ void RayCastingEngine::resize(int width, int height)
 
 void RayCastingEngine::init()
 {
-    glDisable(GL_LIGHT0);
-    glDisable(GL_LIGHTING);
-    //glDisable(GL_DEPTH_TEST);
-    glDisable(GL_COLOR_MATERIAL);
+    initializeShaders();
 }
 
 void RayCastingEngine::draw()
@@ -269,6 +269,62 @@ void RayCastingEngine::computeTransferFunction()
 
         m1DTransferFucntion[(i * 4) + 3] = interpolatedValues[i].w();
         qDebug() << QString("Value[%1] = %2").arg(i).arg(m1DTransferFucntion[(i * 4) + 3]);
+    }
+}
+
+void RayCastingEngine::initializeShaders()
+{
+    QFile vertexShaderFile(":/shaders/rayCasting.vert");
+    QFile fragmentShaderFile(":/shaders/rayCasting.frag");
+
+    if (!vertexShaderFile.open(QIODevice::ReadOnly | QIODevice::Text) || !fragmentShaderFile.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QMessageBox::critical(0, "Error", "Could not open vertex/fragment shader file!");
+    }
+    else
+    {
+        QString vertexShaderSource = QString(vertexShaderFile.readAll().data());
+        QString fragmentShaderSource = QString(fragmentShaderFile.readAll().data());
+
+        vertexShaderFile.close();
+        fragmentShaderFile.close();
+
+        ShaderObject vertexShaderObject(GL_VERTEX_SHADER, vertexShaderSource);
+        ShaderObject fragmentShaderObject(GL_FRAGMENT_SHADER, fragmentShaderSource);
+
+        if (!vertexShaderObject.setShaderObjectSource() || !fragmentShaderObject.setShaderObjectSource())
+        {
+            QMessageBox::critical(0, "Error", "Could not set source code for vertex/fragment shader object!");
+        }
+        else
+        {
+            if (!vertexShaderObject.compileShader() || !fragmentShaderObject.compileShader())
+            {
+                QMessageBox::critical(0, "Error", "Could not compile vertex/fragment shader object!");
+            }
+            else
+            {
+                QList<ShaderObject*> shaderObjectList
+                {
+                    &vertexShaderObject,
+                    &fragmentShaderObject
+                };
+
+                ProgramObject programObject(shaderObjectList);
+
+                if (!programObject.attachShaderObjects())
+                {
+                    QMessageBox::critical(0, "Error", "Could not attach compiled shader objects to the program object!");
+                }
+                else
+                {
+                    if (!programObject.linkProgramObject())
+                    {
+                        QMessageBox::critical(0, "Error", "Could not link program object!");
+                    }
+                }
+            }
+        }
     }
 }
 

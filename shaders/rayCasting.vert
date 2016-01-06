@@ -1,3 +1,4 @@
+#version 120
 uniform vec3 scaleFactor;
 
 void main(void) {

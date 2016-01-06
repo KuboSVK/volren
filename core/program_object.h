@@ -23,6 +23,8 @@ private:
     GLuint mProgramObjectId;
     const QList<ShaderObject*> mAttachedShaderObjects;
 
+    QOpenGLFunctions* mOpenGLFunctions;
+
     Q_DISABLE_COPY(ProgramObject)
 };
 

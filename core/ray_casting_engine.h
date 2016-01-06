@@ -1,8 +1,6 @@
 #ifndef RAY_CASTING_ENGINE_H
 #define RAY_CASTING_ENGINE_H
 
-#include <QByteArray>
-#include <QObject>
 #include <QMap>
 #include <QOpenGLFunctions>
 #include <QString>
@@ -11,8 +9,6 @@
 
 #include "irenderer.h"
 #include "transfer_control_point.h"
-
-QT_FORWARD_DECLARE_CLASS(QDataStream)
 
 namespace core
 {
@@ -28,7 +24,7 @@ struct VolumeDataDesciptor
     quint32 mIterations;
 };
 
-class RayCastingEngine : public IRenderer, public QOpenGLFunctions
+class RayCastingEngine : public IRenderer, protected QOpenGLFunctions
 {
 public:
     RayCastingEngine();
@@ -43,6 +39,7 @@ private:
     void preprocessVolumeData();
     void createSplinePoints();
     void computeTransferFunction();
+    void initializeShaders();
 
 private:
     GLubyte* mCurrentVolumeData;

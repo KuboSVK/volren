@@ -9,6 +9,7 @@ namespace core
 
 ProgramObject::ProgramObject(const QList<ShaderObject*> shaderObjects)
 : mAttachedShaderObjects(shaderObjects)
+, mOpenGLFunctions(QOpenGLContext::currentContext()->functions())
 {
 
 }
@@ -22,12 +23,12 @@ bool ProgramObject::attachShaderObjects()
 {
     bool result(false);
 
-    mProgramObjectId = glCreateProgram();
+    mProgramObjectId = mOpenGLFunctions->glCreateProgram();
     if (mProgramObjectId != 0)
     {
         foreach (const ShaderObject* shaderObject, mAttachedShaderObjects)
         {
-            glAttachShader(mProgramObjectId, shaderObject->shaderObjectId());
+            mOpenGLFunctions->glAttachShader(mProgramObjectId, shaderObject->shaderObjectId());
         }
 
         result = true;
@@ -40,14 +41,14 @@ bool ProgramObject::linkProgramObject()
 {
     bool result;
 
-    glLinkProgram(mProgramObjectId);
+    mOpenGLFunctions->glLinkProgram(mProgramObjectId);
 
     GLint linkStatus;
-    glGetProgramiv(mProgramObjectId, GL_LINK_STATUS, &linkStatus);
+    mOpenGLFunctions->glGetProgramiv(mProgramObjectId, GL_LINK_STATUS, &linkStatus);
     if (linkStatus == GL_TRUE)
     {
         foreach (const ShaderObject* shaderObject, mAttachedShaderObjects) {
-            glDetachShader(mProgramObjectId, shaderObject->shaderObjectId());
+            mOpenGLFunctions->glDetachShader(mProgramObjectId, shaderObject->shaderObjectId());
         }
 
         result = true;
@@ -55,10 +56,10 @@ bool ProgramObject::linkProgramObject()
     else // linkStatus == GL_FALSE
     {
         GLint infoLogLength;
-        glGetProgramiv(mProgramObjectId, GL_INFO_LOG_LENGTH, &infoLogLength);
+        mOpenGLFunctions->glGetProgramiv(mProgramObjectId, GL_INFO_LOG_LENGTH, &infoLogLength);
 
         char* infoLog = new char[infoLogLength + 1];
-        glGetProgramInfoLog(mProgramObjectId, infoLogLength, NULL, infoLog);
+        mOpenGLFunctions->glGetProgramInfoLog(mProgramObjectId, infoLogLength, NULL, infoLog);
 
         qDebug() << "Linking failure.\n";
         qDebug() << infoLog;

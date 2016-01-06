@@ -10,5 +10,7 @@
         <file>images/F1.svg</file>
         <file>images/dmA.svg</file>
         <file>images/dmB.svg</file>
+        <file>shaders/rayCasting.vert</file>
+        <file>shaders/rayCasting.frag</file>
     </qresource>
 </RCC>

@@ -59,7 +59,7 @@ void GLRenderWidget::init()
     camera()->showEntireScene();
     setManipulatedFrame(new qglviewer::ManipulatedFrame());
 
-    //mRayCastingEngine->init();
+    mRayCastingEngine->init();
 
     // Restore previous viewer state.
     restoreStateFromFile();

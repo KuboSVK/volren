@@ -13,15 +13,16 @@ public:
     ShaderObject(GLenum shaderType, const QString shaderSourceString);
     ~ShaderObject();
 
-    bool compileShaderObject();
+    bool setShaderObjectSource();
     bool compileShader();
-    //void checkCompileStatus();
     GLuint shaderObjectId() const;
 
 private:
     GLenum mShaderType;
     QString mShaderSourceString;
     GLuint mShaderObjectId;
+
+    QOpenGLFunctions* mOpenGLFunctions;
 
     Q_DISABLE_COPY(ShaderObject)
 };
